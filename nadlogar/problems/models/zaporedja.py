@@ -210,3 +210,54 @@ class SplosniClenAritmeticnegaEnacbi(Problem):
             "a1": sympy.latex(a1),
             "d": sympy.latex(d),
         }
+        
+def vsota_aritmeticnega(a1, d, n):
+    """
+    Izračuna vsoto prvih n členov aritmetičnega zaporedja.
+    :param a1: prvi člen aritmetičnega zaporedja
+    :param d: diferenca aritmetičnega zaporedja
+    :param n: število členov
+    :return: vsoto prvih n členov
+    >>> vsota_aritmeticnega(3, 1/3, 15)
+    80
+    >>> vsota_aritmeticnega(15, -3, 20)
+    -270
+    """
+    sn = sympy.Rational(n * (2 * a1 + (n - 1) * d), 2)
+    return sn
+
+class VsotaAritmeticnega(Problem):
+    "Naloga za izračun vsote poljubnega aritmetičnega zaporedja"
+    
+    default_instruction = r"Izračunaj vsoto prvih $@stevilo_clenov$ členov aritmetičnega zaporedja, če je $@izraz$."
+    default_solution = r"$s_{@stevilo_clenov}=@vsota$"
+    
+    class Meta:
+        verbose_name = "Zaporedja / vsota prvih n členov aritmetičnega zaporedja"
+    
+    podan_splosni_clen = models.BooleanField(
+        "podan splosni clen",
+        help_text="Ali je podan splošni člen zaporedja?",
+        choices=[(True, "Da"), (False, "Ne")],
+        default=True,
+    )
+    
+    def generate(self):
+        N = random.randint(10, 30)
+        n = sympy.symbols('n')
+        a1 = random.choice([x for x in range(-8, 8) if x != 0])
+        d = random.choice([x for x in range(-5, 5) if x != 0 and x != 1])
+        if self.podan_splosni_clen:
+            izraz = '$a_n=' + sympy.latex(sympy.Add(a1, sympy.Mul(d, (n - 1), evaluate=False), evaluate=False)) + '$'
+        else:
+            [n1, n2] = sorted(random.sample(list(range(1, 21)), 2))
+            if N not in {n1, n2}:
+                raise GeneratedDataIncorrect
+            izraz = '$s_{{{0}}}={1}$ in $s_{{{2}}}={3}$'.format(n1, vsota_aritmeticnega(a1, d, n1), n2,
+                                                                vsota_aritmeticnega(a1, d,
+                                                                                    n2))  
+        vsota = vsota_aritmeticnega(a1, d, N)
+        return {
+            'izraz': izraz, 
+            'stevilo_clenov': N, 
+            'vsota': vsota}
